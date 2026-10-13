@@ -1,0 +1,10 @@
+metric,value
+Test samples,51428.0
+Accuracy,0.9055767286303181
+Precision,0.878832423351533
+Recall,0.9139150943396226
+F1-score,0.8960304885881899
+True Negative,25647.0
+False Positive,2885.0
+False Negative,1971.0
+True Positive,20925.0

@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# macOS
+.DS_Store
+
+# Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local databases and temporary files
+*.sqlite3
+*.db
+*.tmp
+
+# Large datasets and trained model artifacts
+backend/data/raw/
+backend/data/external/
+backend/data/processed/*.pkl
+backend/data/processed/*.joblib
+
+# Local Python environments
+backend/venv/
+backend/.venv/
+# Datasets and local backups
+backend/data/processed/*.csv
+backend/backups/
+backend/dataset.csv
+backend/dataset_backup.csv
+
+# Trained model artifacts
+backend/*.pkl
+
+# Local backup / intermediate source files
+backend/*.backup
+backend/*.before_*
+backend/*.before-*
+frontend/app/globals.css.backup
