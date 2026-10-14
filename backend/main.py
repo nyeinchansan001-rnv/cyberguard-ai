@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from urllib.parse import urlsplit
 from fastapi.middleware.cors import CORSMiddleware
 import re
 import joblib
@@ -31,6 +32,43 @@ model = joblib.load("data/processed/phishing_model_dephides.pkl")
 
 class URLRequest(BaseModel):
     url: str
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("URL must not be empty")
+
+        if value != value.strip():
+            raise ValueError("URL must not start or end with whitespace")
+
+        if len(value) > 2048:
+            raise ValueError("URL must be 2048 characters or fewer")
+
+        if any(ord(char) < 32 or ord(char) == 127 for char in value):
+            raise ValueError("URL must not contain control characters")
+
+        if any(char.isspace() for char in value):
+            raise ValueError("URL must not contain whitespace")
+
+        try:
+            parsed = urlsplit(value)
+            hostname = parsed.hostname
+            # Accessing .port can raise ValueError for malformed ports.
+            _ = parsed.port
+        except ValueError:
+            raise ValueError("URL format is invalid")
+
+        if parsed.scheme.lower() not in ("http", "https"):
+            raise ValueError("URL must use http or https")
+
+        if not parsed.netloc or not hostname:
+            raise ValueError("URL must include a hostname")
+
+        if parsed.username is not None or parsed.password is not None:
+            raise ValueError("URLs containing embedded credentials are not accepted")
+
+        return value
 
 
 def get_ai_explanation(

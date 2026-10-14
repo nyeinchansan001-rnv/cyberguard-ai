@@ -6,10 +6,10 @@ from urllib.parse import urlparse
 load_dotenv()
 
 URLHAUS_AUTH_KEY = os.getenv("URLHAUS_AUTH_KEY")
+URLHAUS_API_URL = "https://urlhaus-api.abuse.ch/v1/url/"
 
 
 def check_threat_intelligence(url: str):
-
     parsed = urlparse(url)
     domain = parsed.hostname or ""
 
@@ -24,13 +24,9 @@ def check_threat_intelligence(url: str):
 
     try:
         response = requests.post(
-            "https://urlhaus-api.abuse.ch/v1/url/",
-            headers={
-                "Auth-Key": URLHAUS_AUTH_KEY
-            },
-            data={
-                "url": url
-            },
+            URLHAUS_API_URL,
+            headers={"Auth-Key": URLHAUS_AUTH_KEY},
+            data={"url": url},
             timeout=10
         )
 
@@ -40,12 +36,23 @@ def check_threat_intelligence(url: str):
                 "known_threat": False,
                 "reputation": "Unavailable",
                 "source": "URLhaus",
-                "message": f"API request failed with status {response.status_code}"
+                "message": "URLhaus API request failed."
             }
 
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError:
+            return {
+                "domain": domain,
+                "known_threat": False,
+                "reputation": "Unavailable",
+                "source": "URLhaus",
+                "message": "URLhaus returned an invalid response."
+            }
 
-        if data.get("query_status") == "ok":
+        query_status = data.get("query_status")
+
+        if query_status == "ok":
             return {
                 "domain": domain,
                 "known_threat": True,
@@ -55,19 +62,32 @@ def check_threat_intelligence(url: str):
                 "threat": data.get("threat")
             }
 
-        return {
-            "domain": domain,
-            "known_threat": False,
-            "reputation": "No match",
-            "source": "URLhaus",
-            "query_status": data.get("query_status")
-        }
+        if query_status == "no_results":
+            return {
+                "domain": domain,
+                "known_threat": False,
+                "reputation": "No match",
+                "source": "URLhaus",
+                "query_status": query_status,
+                "message": (
+                    "No matching URL was found in URLhaus. "
+                    "This does not mean the URL is safe."
+                )
+            }
 
-    except requests.RequestException as e:
         return {
             "domain": domain,
             "known_threat": False,
             "reputation": "Unavailable",
             "source": "URLhaus",
-            "message": str(e)
+            "message": "URLhaus returned an unexpected response status."
+        }
+
+    except requests.RequestException:
+        return {
+            "domain": domain,
+            "known_threat": False,
+            "reputation": "Unavailable",
+            "source": "URLhaus",
+            "message": "Could not connect to URLhaus."
         }
