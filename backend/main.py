@@ -314,7 +314,9 @@ def analyze_url(request: URLRequest):
         risk_score,
         risk_level,
         features,
-        threat_intel
+        threat_intel,
+        final_risk=final_risk,
+        recommendation=recommendation
     )
 
     # 8. Return results
